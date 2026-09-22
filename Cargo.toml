@@ -1,0 +1,35 @@
+[workspace]
+resolver = "2"
+members = [
+    "crates/sumer-span",
+    "crates/sumer-lexer",
+    "crates/sumer-ast",
+    "crates/sumer-parser",
+    "crates/sumer-diagnostics",
+    "crates/sumer-types",
+    "crates/sumer-sema",
+    "crates/sumer-hir",
+    "crates/sumer-mir",
+    "crates/sumer-codegen",
+    "crates/sumer-driver",
+    "crates/sumer-cli",
+]
+
+[workspace.package]
+version = "0.1.0"
+edition = "2024"
+license = "MIT"
+authors = ["SUMER Language Contributors"]
+
+[workspace.dependencies]
+sumer-span = { path = "crates/sumer-span" }
+sumer-lexer = { path = "crates/sumer-lexer" }
+sumer-ast = { path = "crates/sumer-ast" }
+sumer-parser = { path = "crates/sumer-parser" }
+sumer-diagnostics = { path = "crates/sumer-diagnostics" }
+sumer-types = { path = "crates/sumer-types" }
+sumer-sema = { path = "crates/sumer-sema" }
+sumer-hir = { path = "crates/sumer-hir" }
+sumer-mir = { path = "crates/sumer-mir" }
+sumer-codegen = { path = "crates/sumer-codegen" }
+sumer-driver = { path = "crates/sumer-driver" }

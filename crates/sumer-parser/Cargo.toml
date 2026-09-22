@@ -1,0 +1,11 @@
+[package]
+name = "sumer-parser"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[dependencies]
+sumer-span = { workspace = true }
+sumer-lexer = { workspace = true }
+sumer-ast = { workspace = true }
+sumer-diagnostics = { workspace = true }

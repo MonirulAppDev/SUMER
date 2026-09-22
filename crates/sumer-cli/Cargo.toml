@@ -1,0 +1,12 @@
+[package]
+name = "sumer-cli"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[[bin]]
+name = "sumer"
+path = "src/main.rs"
+
+[dependencies]
+sumer-driver = { workspace = true }
