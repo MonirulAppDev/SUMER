@@ -34,9 +34,14 @@ pub fn parse_type(cursor: &mut TokenCursor<'_>) -> ParseResult<Type> {
         TokenKind::LBracket => {
             let start = cursor.advance().span();
             let element = parse_type(cursor)?;
+            let size = if cursor.match_token(&TokenKind::Semicolon) {
+                Some(crate::expression::parse_expression(cursor)?)
+            } else {
+                None
+            };
             let rbracket = cursor.expect(&TokenKind::RBracket)?;
             let span = start.join(rbracket.span()).unwrap_or(start);
-            Type::array(element, None, span)
+            Type::array(element, size, span)
         }
         TokenKind::LParen => {
             let start = cursor.advance().span();
@@ -79,7 +84,11 @@ pub fn parse_type(cursor: &mut TokenCursor<'_>) -> ParseResult<Type> {
             let span = start.join(ret.span).unwrap_or(start);
             Type::function(params, ret, span)
         }
-        TokenKind::Identifier(_) => {
+        TokenKind::Identifier(_)
+        | TokenKind::Some
+        | TokenKind::None
+        | TokenKind::Ok
+        | TokenKind::Err => {
             let first = cursor.parse_identifier()?;
             let mut segments = vec![first.clone()];
             let mut span = first.span();
@@ -123,7 +132,10 @@ pub fn parse_type(cursor: &mut TokenCursor<'_>) -> ParseResult<Type> {
 
     // Suffix: `?` optional
     if cursor.match_token(&TokenKind::Question) {
-        let span = base.span.join(cursor.previous().span()).unwrap_or(base.span);
+        let span = base
+            .span
+            .join(cursor.previous().span())
+            .unwrap_or(base.span);
         base = Type::optional(base, span);
     }
 

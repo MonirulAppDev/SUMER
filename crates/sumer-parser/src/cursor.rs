@@ -12,6 +12,11 @@ pub struct TokenCursor<'a> {
     position: usize,
 }
 
+static DEFAULT_EOF: Token = Token::new(
+    TokenKind::Eof,
+    sumer_span::Span::new(sumer_span::SourceId::new(0), 0, 0),
+);
+
 impl<'a> TokenCursor<'a> {
     /// Creates a new `TokenCursor` over the provided slice of tokens.
     pub fn new(tokens: &'a [Token]) -> Self {
@@ -30,7 +35,7 @@ impl<'a> TokenCursor<'a> {
         } else if let Some(last) = self.tokens.last() {
             last
         } else {
-            panic!("empty token stream passed to parser");
+            &DEFAULT_EOF
         }
     }
 
@@ -49,7 +54,7 @@ impl<'a> TokenCursor<'a> {
         } else if let Some(last) = self.tokens.last() {
             last
         } else {
-            panic!("empty token stream passed to parser");
+            &DEFAULT_EOF
         }
     }
 
@@ -116,15 +121,48 @@ impl<'a> TokenCursor<'a> {
         self.match_token(&TokenKind::Semicolon)
     }
 
+    /// Returns `true` if the current token can be treated as an identifier.
+    pub fn is_identifier_like(&self) -> bool {
+        matches!(
+            self.current().kind(),
+            TokenKind::Identifier(_)
+                | TokenKind::Some
+                | TokenKind::None
+                | TokenKind::Ok
+                | TokenKind::Err
+        )
+    }
+
     /// Parses an identifier from the current token, advancing if successful.
     pub fn parse_identifier(&mut self) -> ParseResult<Identifier> {
         let tok = self.current();
-        if let TokenKind::Identifier(name) = tok.kind() {
-            let ident = Identifier::new(name.clone(), tok.span());
-            self.advance();
-            Ok(ident)
-        } else {
-            Err(ParseError::expected_identifier(tok))
+        match tok.kind() {
+            TokenKind::Identifier(name) => {
+                let ident = Identifier::new(name.clone(), tok.span());
+                self.advance();
+                Ok(ident)
+            }
+            TokenKind::Some => {
+                let ident = Identifier::new("Some", tok.span());
+                self.advance();
+                Ok(ident)
+            }
+            TokenKind::None => {
+                let ident = Identifier::new("None", tok.span());
+                self.advance();
+                Ok(ident)
+            }
+            TokenKind::Ok => {
+                let ident = Identifier::new("Ok", tok.span());
+                self.advance();
+                Ok(ident)
+            }
+            TokenKind::Err => {
+                let ident = Identifier::new("Err", tok.span());
+                self.advance();
+                Ok(ident)
+            }
+            _ => Err(ParseError::expected_identifier(tok)),
         }
     }
 

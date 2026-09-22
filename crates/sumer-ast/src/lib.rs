@@ -9,6 +9,7 @@ pub mod expression;
 pub mod generics;
 pub mod identifier;
 pub mod pattern;
+pub mod pretty;
 pub mod program;
 pub mod statement;
 pub mod types;
@@ -19,6 +20,7 @@ pub use expression::*;
 pub use generics::*;
 pub use identifier::*;
 pub use pattern::*;
+pub use pretty::{AstPrinter, pretty_print, pretty_print_with_spans};
 pub use program::*;
 pub use statement::*;
 pub use types::*;
@@ -647,5 +649,177 @@ mod tests {
         } else {
             panic!("expected Function declaration");
         }
+    }
+
+    // ----------------------------------------------------
+    // 8. AST PRETTY PRINTER TESTS
+    // ----------------------------------------------------
+    #[test]
+    fn test_pretty_print_hello_world() {
+        let call_expr = Expr::call(
+            Expr::identifier(ident("print")),
+            vec![Argument::positional(Expr::literal(
+                Literal::String("Hello, SUMER!".to_string()),
+                dummy_span(),
+            ))],
+            dummy_span(),
+        );
+
+        let body_block = Block::new(vec![Stmt::expr(call_expr)], dummy_span());
+
+        let func_main = FunctionDecl::new(
+            ident("main"),
+            Visibility::Private,
+            false,
+            GenericParams::default(),
+            vec![],
+            None,
+            body_block,
+            vec![],
+            dummy_span(),
+        );
+
+        let program = Program::new(vec![], vec![Declaration::Function(func_main)], dummy_span());
+        let output = pretty_print(&program);
+
+        let expected = "\
+Program
+└── Function: main
+    ├── Visibility: Private
+    ├── Async: false
+    ├── Parameters: 0
+    └── Body
+        └── ExpressionStatement
+            └── Call
+                ├── Function
+                │   └── Identifier: print
+                └── Arguments
+                    └── String: \"Hello, SUMER!\"
+";
+        assert_eq!(output, expected);
+    }
+
+    #[test]
+    fn test_pretty_print_binary_precedence() {
+        // a + b * c
+        let mul = Expr::binary(
+            Expr::identifier(ident("b")),
+            BinaryOperator::Multiply,
+            Expr::identifier(ident("c")),
+            dummy_span(),
+        );
+        let add = Expr::binary(
+            Expr::identifier(ident("a")),
+            BinaryOperator::Add,
+            mul,
+            dummy_span(),
+        );
+        let func = FunctionDecl::new(
+            ident("calc"),
+            Visibility::Public,
+            false,
+            GenericParams::default(),
+            vec![],
+            None,
+            Block::new(vec![Stmt::expr(add)], dummy_span()),
+            vec![],
+            dummy_span(),
+        );
+        let program = Program::new(vec![], vec![Declaration::Function(func)], dummy_span());
+        let output = pretty_print(&program);
+
+        assert!(output.contains("Binary: +"));
+        assert!(output.contains("├── Identifier: a"));
+        assert!(output.contains("└── Binary: *"));
+        assert!(output.contains("├── Identifier: b"));
+        assert!(output.contains("└── Identifier: c"));
+    }
+
+    #[test]
+    fn test_pretty_print_spans() {
+        let span1 = Span::new(SourceId(0), 0, 37);
+        let func = FunctionDecl::new(
+            ident("main"),
+            Visibility::Private,
+            false,
+            GenericParams::default(),
+            vec![],
+            None,
+            Block::new(vec![], dummy_span()),
+            vec![],
+            span1,
+        );
+        let program = Program::new(vec![], vec![Declaration::Function(func)], span1);
+        let output = pretty_print_with_spans(&program);
+
+        assert!(output.contains("Program [0..37]"));
+        assert!(output.contains("Function: main [0..37]"));
+    }
+
+    #[test]
+    fn test_pretty_print_declarations_and_patterns() {
+        let field = FieldDecl::new(
+            ident("id"),
+            Visibility::Public,
+            named_type("Int"),
+            None,
+            vec![],
+            dummy_span(),
+        );
+        let struct_decl = StructDecl::new(
+            ident("User"),
+            Visibility::Public,
+            GenericParams::default(),
+            vec![StructMember::Field(field)],
+            vec![Attribute::simple(
+                ident("derive"),
+                vec![ident("Debug")],
+                dummy_span(),
+            )],
+            dummy_span(),
+        );
+
+        let variant_active = EnumVariant::new(ident("Active"), VariantData::Unit, dummy_span());
+        let variant_card = EnumVariant::new(
+            ident("Card"),
+            VariantData::Tuple(vec![named_type("String")]),
+            dummy_span(),
+        );
+        let enum_decl = EnumDecl::new(
+            ident("Status"),
+            Visibility::Private,
+            GenericParams::default(),
+            vec![variant_active, variant_card],
+            vec![],
+            dummy_span(),
+        );
+
+        let var_decl = VariableDecl::new(
+            ident("age"),
+            false,
+            Some(named_type("Int")),
+            Expr::literal(Literal::Integer("30".to_string()), dummy_span()),
+            Visibility::Private,
+            dummy_span(),
+        );
+
+        let program = Program::new(
+            vec![],
+            vec![
+                Declaration::Struct(struct_decl),
+                Declaration::Enum(enum_decl),
+                Declaration::Variable(var_decl),
+            ],
+            dummy_span(),
+        );
+
+        let output = pretty_print(&program);
+        assert!(output.contains("Struct: User"));
+        assert!(output.contains("Field: id : Int"));
+        assert!(output.contains("Enum: Status"));
+        assert!(output.contains("Variant: Active"));
+        assert!(output.contains("Variant: Card(String)"));
+        assert!(output.contains("VariableDecl: let age: Int"));
+        assert!(output.contains("Integer: 30"));
     }
 }

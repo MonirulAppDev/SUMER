@@ -116,6 +116,24 @@ impl ParseError {
             span,
         )
     }
+
+    /// Converts this parser error into a structured [`sumer_diagnostics::Diagnostic`].
+    pub fn to_diagnostic(&self) -> sumer_diagnostics::Diagnostic {
+        sumer_diagnostics::Diagnostic::error(self.message.clone())
+            .with_primary(self.span, self.message.clone())
+    }
+}
+
+impl From<&ParseError> for sumer_diagnostics::Diagnostic {
+    fn from(err: &ParseError) -> Self {
+        err.to_diagnostic()
+    }
+}
+
+impl From<ParseError> for sumer_diagnostics::Diagnostic {
+    fn from(err: ParseError) -> Self {
+        err.to_diagnostic()
+    }
 }
 
 impl fmt::Display for ParseError {

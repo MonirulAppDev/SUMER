@@ -1,0 +1,55 @@
+@derive(Debug)
+pub struct User<T> {
+    id: Int
+    name: String
+    value: T
+
+    fn greet() {
+        print("Hello")
+    }
+}
+
+enum Status {
+    Active
+    Inactive
+    Suspended(String)
+}
+
+trait Printable {
+    fn print()
+}
+
+impl Printable for User<Int> {
+    fn print() {
+        print("User")
+    }
+}
+
+pub async fn main<T: Printable>(value: T) -> Result<Int, String> {
+    let age: Int = 30
+    var count = 0
+
+    if age >= 18 && count == 0 {
+        count += 1
+    } else {
+        count = 0
+    }
+
+    for i in 0..10 {
+        if i == 5 {
+            continue
+        }
+        print(i)
+    }
+
+    loop {
+        break
+    }
+
+    let status = match count {
+        1 => "One"
+        _ => "Other"
+    }
+
+    return Ok(count)
+}

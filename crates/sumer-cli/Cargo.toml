@@ -9,4 +9,7 @@ name = "sumer"
 path = "src/main.rs"
 
 [dependencies]
+sumer-span = { workspace = true }
+sumer-ast = { workspace = true }
+sumer-diagnostics = { workspace = true }
 sumer-driver = { workspace = true }

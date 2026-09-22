@@ -9,3 +9,7 @@ sumer-span = { workspace = true }
 sumer-ast = { workspace = true }
 sumer-types = { workspace = true }
 sumer-diagnostics = { workspace = true }
+
+[dev-dependencies]
+sumer-lexer = { workspace = true }
+sumer-parser = { workspace = true }

@@ -6,3 +6,4 @@ license.workspace = true
 
 [dependencies]
 sumer-span = { workspace = true }
+sumer-diagnostics = { workspace = true }

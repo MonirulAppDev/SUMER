@@ -66,6 +66,24 @@ impl LexerError {
             message: message.into(),
         }
     }
+
+    /// Converts this lexer error into a structured [`sumer_diagnostics::Diagnostic`].
+    pub fn to_diagnostic(&self) -> sumer_diagnostics::Diagnostic {
+        sumer_diagnostics::Diagnostic::error(self.message.clone())
+            .with_primary(self.span, self.kind.to_string())
+    }
+}
+
+impl From<&LexerError> for sumer_diagnostics::Diagnostic {
+    fn from(err: &LexerError) -> Self {
+        err.to_diagnostic()
+    }
+}
+
+impl From<LexerError> for sumer_diagnostics::Diagnostic {
+    fn from(err: LexerError) -> Self {
+        err.to_diagnostic()
+    }
 }
 
 impl fmt::Display for LexerError {
